@@ -21,6 +21,21 @@ pytest-watch = "^4.2.0"
 pytest-cov = "^5.0.0"
 pytest-testmon = "^2.1.1"
 
+[tool.isort]
+profile = "black"
+src_paths = ["src", "test"]
+
+[tool.pylint]
+extension-pkg-allow-list = ["pydantic"]
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = [
+  'missing-module-docstring',
+  'missing-class-docstring',
+  'missing-function-docstring',
+  'too-few-public-methods',
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
