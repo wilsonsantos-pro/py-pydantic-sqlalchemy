@@ -30,11 +30,10 @@ extension-pkg-allow-list = ["pydantic"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = [
-  'missing-module-docstring',
-  'missing-class-docstring',
-  'missing-function-docstring',
-  'too-few-public-methods',
-]
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "too-few-public-methods"]
 
 [build-system]
 requires = ["poetry-core"]

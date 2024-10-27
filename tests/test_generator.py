@@ -14,8 +14,8 @@ class User(BaseModel):
 def test_pydantic_to_sqlalchemy_code():
     expected = """class User(Base):
     __tablename__ = "user"
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(Text, nullable=False)
     age = Column(Integer, nullable=True)
 """
     assert pydantic_to_sqlalchemy_code(User, "user") == expected
