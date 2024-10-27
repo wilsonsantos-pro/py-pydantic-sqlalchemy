@@ -56,7 +56,8 @@ test-monitor:
 	@echo "----------------------"
 	@echo "- 🧪 Test Monitor 🧪 -"
 	@echo "----------------------"
-	@poetry run ptw -- --testmon
+	# @poetry run ptw -- --testmon
+	@ptw -- --testmon
 .PHONY: coverage
 coverage:
 	@echo "-----------------------"
