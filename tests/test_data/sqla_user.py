@@ -28,3 +28,28 @@ class UserParentAssoc(Base):
     parent_id = Column(
         Integer, ForeignKey("parent.id"), primary_key=True, nullable=False
     )
+
+
+def insert_address(session, data: dict[str, Any]) -> None:
+    record = Address(
+        postal_code=data["postal_code"],
+        city=data["city"],
+    )
+    session.add(record)
+
+
+def insert_user(session, data: dict[str, Any]) -> None:
+    record = User(
+        id=data["id"],
+        name=data["name"],
+        age=data.get("age"),
+        address_id=data["address_id"],
+    )
+    session.add(record)
+
+    parent_ids = data.get("parent_ids", [])
+    for related_record_id in parent_ids:
+        related_record = UserParentAssoc(
+            user_id=data["id"], parent_id=related_record_id
+        )
+        session.add(related_record)

@@ -55,17 +55,20 @@ class _PydanticModelParser:
                 _field_definition = TypeDefinition.get_field_definition(
                     field_type, foreign_key=True
                 )
+                class_name = camel_to_snake(related_table)
                 self.columns.append(
                     Column(
                         name=field_name,
-                        field_definition=_field_definition,
+                        type_definition=_field_definition,
                         foreign_key=True,
                         related_table=related_table,
                     )
                 )
                 self.relationships.append(
                     Relationship(
-                        name=field_name[:-3].lower(), related_table=related_table
+                        class_name=class_name,
+                        name=field_name[:-3].lower(),
+                        related_table=related_table,
                     )
                 )
 
@@ -82,14 +85,14 @@ class _PydanticModelParser:
                 m2m_table_columns = [
                     Column(
                         name=f"{self.table_name}_id",
-                        field_definition=_field_definition,
+                        type_definition=_field_definition,
                         primary_key=True,
                         foreign_key=True,
                         related_table=self.table_name,
                     ),
                     Column(
                         name=f"{related_table}_id",
-                        field_definition=_field_definition,
+                        type_definition=_field_definition,
                         primary_key=True,
                         foreign_key=True,
                         related_table=related_table,
@@ -103,12 +106,14 @@ class _PydanticModelParser:
                         table_name=m2m_table_name,
                         columns=m2m_table_columns,
                         relationships=[],
+                        is_m2m=True,
                     )
                 )
 
                 # Define the relationship for the many-to-many association
                 self.relationships.append(
                     Relationship(
+                        class_name=m2m_class_name,
                         name=related_table.lower() + "s",
                         related_table=related_table,
                         secondary=m2m_table_name.lower(),
@@ -120,7 +125,7 @@ class _PydanticModelParser:
                 self.columns.append(
                     Column(
                         name=field_name,
-                        field_definition=_field_definition,
+                        type_definition=_field_definition,
                         primary_key=field_name == "id",
                     )
                 )

@@ -41,4 +41,13 @@ def render_all(parse_results: list[ParseResult]) -> str:
         imports=imports,
         global_defs=set(global_defs),
     )
-    return str(all_models_code)
+
+    model_template = template_loader.get_template("model_insert_template.mako")
+    all_insert_code = ""
+    for model in [m for m in models if not m.is_m2m]:
+        all_insert_code += str(
+            model_template.render(
+                model=model,
+            )
+        )
+    return str(all_models_code) + all_insert_code

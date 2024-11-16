@@ -75,7 +75,7 @@ class TypeDefinition:
 @dataclass
 class Column:
     name: str
-    field_definition: TypeDefinition
+    type_definition: TypeDefinition
     related_table: str = ""
     primary_key: Optional[bool] = False
     foreign_key: Optional[bool] = False
@@ -97,6 +97,7 @@ class DeclarativeBase:
 @dataclass
 class Relationship:
     name: str
+    class_name: str
     related_table: str
     secondary: Optional[str] = None
     back_populates: Optional[str] = None
@@ -109,6 +110,7 @@ class Model:
     table_name: str
     columns: list[Column]
     relationships: list[Relationship]
+    is_m2m: bool = False
 
 
 _type_def_mappings = {

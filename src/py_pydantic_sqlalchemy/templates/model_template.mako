@@ -17,13 +17,13 @@ if column.foreign_key:
     extra_kwargs += f', ForeignKey("{column.related_table.lower()}.id")'
 if column.primary_key:
     extra_kwargs += ", primary_key=True"
-if column.field_definition.nullable:
+if column.type_definition.nullable:
     extra_kwargs += ", nullable=True"
 else:
     extra_kwargs += ", nullable=False"
-if column.field_definition.type_args:
-  type_args = f"({column.field_definition.type_args})"
-code_str += f"{column.field_definition.type}{type_args}{extra_kwargs}"
+if column.type_definition.type_args:
+  type_args = f"({column.type_definition.type_args})"
+code_str += f"{column.type_definition.type}{type_args}{extra_kwargs}"
 %>
     ${column.name} = Column(${code_str})\
 % endfor ## columns
