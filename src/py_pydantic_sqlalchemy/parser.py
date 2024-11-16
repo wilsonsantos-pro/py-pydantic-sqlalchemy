@@ -1,5 +1,6 @@
 import typing
 from dataclasses import dataclass, field
+from inspect import isclass
 
 from pydantic import BaseModel
 
@@ -121,6 +122,21 @@ class _PydanticModelParser:
                     )
                 )
             else:
+                if _field_definition.compound:
+                    _parse_result = _PydanticModelParser(field_type).parse()
+                    if (
+                        _parse_result.models
+                        and (_primary_key := _parse_result.models[0].primary_key)
+                        is not None
+                    ):
+                        self.columns.append(
+                            Column(
+                                name=f"{field_name}_id",
+                                type_definition=_primary_key.type_definition,
+                            )
+                        )
+                        continue
+
                 # Basic types
                 self.columns.append(
                     Column(
@@ -143,7 +159,7 @@ class _PydanticModelParser:
             self.imports.append(ImportDefinition(name="ForeignKey"))
 
         return ParseResult(
-            models=self.models,
+            models=self.models if model.primary_key else [],
             imports=self.imports,
             global_defs=[self.base.global_def],
         )

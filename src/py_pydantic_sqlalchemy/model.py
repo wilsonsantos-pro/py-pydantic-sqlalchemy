@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from types import NoneType
 from typing import Any, List, Optional
 
+from pydantic import BaseModel
+
 
 @dataclass
 class ImportDefinition:
@@ -27,6 +29,7 @@ class TypeDefinition:
     import_def: ImportDefinition
     nullable: bool = False
     type_args: str | None = None
+    compound: bool = False
 
     @staticmethod
     def get_field_definition(field_type, foreign_key: bool = False) -> "TypeDefinition":
@@ -34,6 +37,7 @@ class TypeDefinition:
         _type_def = None
         _origin = typing.get_origin(field_type)
         _type_args = None
+        compound = False
         if _origin == typing.Union:
             for arg in typing.get_args(field_type):
                 if arg == NoneType:
@@ -56,6 +60,9 @@ class TypeDefinition:
                 if not _sub_type_def:
                     raise ValueError(f"No type def found for {_sub_type}")
                 _type_args = f"{_sub_type_def.name}, {_type_def.args or ''}"
+        elif issubclass(field_type, BaseModel):
+            _type_def = _type_def_mappings.get(BaseModel)
+            compound = True
         else:
             _type_def = _type_def_mappings.get(field_type)
 
@@ -69,6 +76,7 @@ class TypeDefinition:
             import_def=ImportDefinition(_type_def.name, _type_def.package),
             nullable=nullable,
             type_args=_type_args,
+            compound=compound,
         )
 
 
@@ -112,6 +120,13 @@ class Model:
     relationships: list[Relationship]
     is_m2m: bool = False
 
+    @property
+    def primary_key(self) -> Column | None:
+        for c in self.columns:
+            if c.primary_key:
+                return c
+        return None
+
 
 _type_def_mappings = {
     int: _TypeDefinitionDefaults(name="Integer"),
@@ -131,5 +146,8 @@ _type_def_mappings = {
     decimal.Decimal: _TypeDefinitionDefaults(name="Numeric"),
     uuid.UUID: _TypeDefinitionDefaults(
         name="UUID", package="sqlalchemy.dialects.postgresql", args="as_uuid=True"
+    ),
+    BaseModel: _TypeDefinitionDefaults(
+        name="JSONB", package="sqlalchemy.dialects.postgresql"
     ),
 }
