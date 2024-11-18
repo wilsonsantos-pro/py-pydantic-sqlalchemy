@@ -21,8 +21,19 @@ class ParseResult:
     global_defs: list[str]
 
 
-def parse_pydantic_model(pydantic_model: typing.Type[BaseModel]) -> ParseResult:
-    return _PydanticModelParser(pydantic_model).parse()
+def _default_model_bases_factory():
+    return [ModelBase()]
+
+
+@dataclass
+class ParserConfig:
+    model_bases: list[ModelBase] = field(default_factory=_default_model_bases_factory)
+
+
+def parse_pydantic_model(
+    pydantic_model: typing.Type[BaseModel], parser_config: ParserConfig | None = None
+) -> ParseResult:
+    return _PydanticModelParser(pydantic_model, parser_config or ParserConfig()).parse()
 
 
 M2M_SUFFIX = "assoc"
@@ -31,6 +42,7 @@ M2M_SUFFIX = "assoc"
 @dataclass
 class _PydanticModelParser:
     pydantic_model: typing.Type[BaseModel]
+    parser_config: ParserConfig
     columns: list[Column] = field(default_factory=list)
     relationships: list[Relationship] = field(default_factory=list)
     models: list[Model] = field(default_factory=list)
@@ -100,7 +112,7 @@ class _PydanticModelParser:
                 self.models.append(
                     Model(
                         class_name=m2m_class_name,
-                        model_bases=[ModelBase()],
+                        model_bases=self.parser_config.model_bases,
                         table_name=m2m_table_name,
                         columns=m2m_table_columns,
                         relationships=[],
@@ -120,7 +132,9 @@ class _PydanticModelParser:
                 )
             else:
                 if _field_definition.compound:
-                    _parse_result = _PydanticModelParser(field_type).parse()
+                    _parse_result = _PydanticModelParser(
+                        field_type, self.parser_config
+                    ).parse()
                     if (
                         _parse_result.models
                         and (_primary_key := _parse_result.models[0].primary_key)
@@ -145,7 +159,7 @@ class _PydanticModelParser:
 
         model = Model(
             class_name=self.pydantic_model.__name__,
-            model_bases=[ModelBase()],
+            model_bases=self.parser_config.model_bases,
             table_name=self.table_name,
             columns=self.columns,
             relationships=self.relationships,

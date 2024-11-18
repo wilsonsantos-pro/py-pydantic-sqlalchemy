@@ -10,4 +10,4 @@ def test_pydantic_to_sqlalchemy_code():
     ) as fexpected:
         expected = fexpected.read()
 
-    assert pydantic_to_sqlalchemy_code(str(test_src)) == expected
+    assert pydantic_to_sqlalchemy_code(str(test_src), None) == expected

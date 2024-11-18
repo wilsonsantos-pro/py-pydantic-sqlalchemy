@@ -1,0 +1,12 @@
+---
+model_bases:
+  - name: BASE
+    import_def:
+      name: BASE
+      package: database.models
+    global_def: ''
+  - name: Model
+    import_def:
+      name: Model
+      package: database.models
+    global_def: ''
