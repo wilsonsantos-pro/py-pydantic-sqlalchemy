@@ -6,7 +6,10 @@ from ${_import.package} import ${_import.name}
 ${_global_def}
 % endfor
 % for model in models:
-class ${model.class_name}(${model.parent}):
+<%
+base_model = ",".join(b.name for b in model.model_bases)
+%>
+class ${model.class_name}(${base_model}):
     __tablename__ = "${model.table_name}"\
 
 % for column in model.columns:

@@ -1,14 +1,13 @@
 import typing
 from dataclasses import dataclass, field
-from inspect import isclass
 
 from pydantic import BaseModel
 
 from .model import (
     Column,
-    DeclarativeBase,
     ImportDefinition,
     Model,
+    ModelBase,
     Relationship,
     TypeDefinition,
 )
@@ -36,19 +35,17 @@ class _PydanticModelParser:
     relationships: list[Relationship] = field(default_factory=list)
     models: list[Model] = field(default_factory=list)
     table_name: str = ""
-    imports: list[ImportDefinition] = field(default_factory=list)
-    base: DeclarativeBase = field(default_factory=DeclarativeBase)
+    imports: set[ImportDefinition] = field(default_factory=set)
+    base: ModelBase = field(default_factory=ModelBase)
 
     def __post_init__(self):
         self.table_name = camel_to_snake(self.pydantic_model.__name__)
 
     def parse(self) -> ParseResult:
-        self.imports = [ImportDefinition(name="Column")]
-        self.imports.append(self.base.import_def)
 
         for field_name, field_type in self.pydantic_model.__annotations__.items():
             _field_definition = TypeDefinition.get_field_definition(field_type)
-            self.imports.append(_field_definition.import_def)
+            self.imports.add(_field_definition.import_def)
 
             if field_name.endswith("_id"):
                 # Foreign key field
@@ -103,7 +100,7 @@ class _PydanticModelParser:
                 self.models.append(
                     Model(
                         class_name=m2m_class_name,
-                        parent="Base",
+                        model_bases=[ModelBase()],
                         table_name=m2m_table_name,
                         columns=m2m_table_columns,
                         relationships=[],
@@ -148,7 +145,7 @@ class _PydanticModelParser:
 
         model = Model(
             class_name=self.pydantic_model.__name__,
-            parent="Base",
+            model_bases=[ModelBase()],
             table_name=self.table_name,
             columns=self.columns,
             relationships=self.relationships,
@@ -156,10 +153,18 @@ class _PydanticModelParser:
         self.models.insert(0, model)
 
         if self.relationships:
-            self.imports.append(ImportDefinition(name="ForeignKey"))
+            self.imports.add(ImportDefinition(name="ForeignKey"))
+
+        self.imports.add(ImportDefinition(name="Column"))
+
+        globals_defs = set()
+        for m in self.models:
+            for b in m.model_bases:
+                self.imports.add(b.import_def)
+                globals_defs.add(b.global_def)
 
         return ParseResult(
             models=self.models if model.primary_key else [],
-            imports=self.imports,
-            global_defs=[self.base.global_def],
+            imports=list(self.imports),
+            global_defs=list(globals_defs),
         )

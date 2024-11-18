@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
@@ -8,6 +8,7 @@ Base = declarative_base()
 class Address(Base):
     __tablename__ = "address"
 
+    id = Column(Integer, primary_key=True, nullable=False)
     postal_code = Column(Integer, nullable=False)
     city = Column(Text, nullable=False)
 
@@ -32,6 +33,7 @@ class UserParentAssoc(Base):
 
 def insert_address(session, data: dict[str, Any]) -> None:
     record = Address(
+        id=data["id"],
         postal_code=data["postal_code"],
         city=data["city"],
     )

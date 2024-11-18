@@ -5,7 +5,7 @@ import uuid
 from collections import namedtuple
 from dataclasses import dataclass
 from types import NoneType
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -14,6 +14,9 @@ from pydantic import BaseModel
 class ImportDefinition:
     name: str
     package: str = "sqlalchemy"
+
+    def __hash__(self) -> int:
+        return hash(self.name + self.package)
 
 
 _TypeDefinitionDefaults = namedtuple(
@@ -32,7 +35,9 @@ class TypeDefinition:
     compound: bool = False
 
     @staticmethod
-    def get_field_definition(field_type, foreign_key: bool = False) -> "TypeDefinition":
+    def get_field_definition(
+        field_type: Any, foreign_key: bool = False
+    ) -> "TypeDefinition":
         nullable = False
         _type_def = None
         _origin = typing.get_origin(field_type)
@@ -94,10 +99,12 @@ class Column:
 
 
 @dataclass
-class DeclarativeBase:
+class ModelBase:
+    """The SQLAlchemy will inherit from this model."""
+
     name: str = "Base"
     import_def: ImportDefinition = ImportDefinition(
-        name="declarative_base", package="sqlalchemy.ext.declarative"
+        name="declarative_base", package="sqlalchemy.orm"
     )
     global_def: str = "Base = declarative_base()"
 
@@ -114,7 +121,7 @@ class Relationship:
 @dataclass
 class Model:
     class_name: str
-    parent: str
+    model_bases: list[ModelBase]
     table_name: str
     columns: list[Column]
     relationships: list[Relationship]

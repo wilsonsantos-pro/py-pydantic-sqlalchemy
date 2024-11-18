@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class Address(BaseModel):
+    id: int
     postal_code: int
     city: str
 
