@@ -4,6 +4,7 @@ import typing
 import uuid
 from collections import namedtuple
 from dataclasses import dataclass
+from enum import Enum
 from types import NoneType
 from typing import Any, Optional
 
@@ -68,6 +69,8 @@ class TypeDefinition:
         elif issubclass(field_type, BaseModel):
             _type_def = _type_def_mappings.get(BaseModel)
             compound = True
+        elif issubclass(field_type, Enum):
+            _type_def = _type_def_mappings.get(int)
         else:
             _type_def = _type_def_mappings.get(field_type)
 
@@ -147,6 +150,7 @@ _type_def_mappings = {
     list: _TypeDefinitionDefaults(
         name="ARRAY", package="sqlalchemy.dialects.postgresql", args="dimensions=1"
     ),
+    Enum: _TypeDefinitionDefaults(name="Integer"),
     datetime.datetime: _TypeDefinitionDefaults(name="DateTime"),
     datetime.date: _TypeDefinitionDefaults(name="Date"),
     datetime.time: _TypeDefinitionDefaults(name="Time"),
